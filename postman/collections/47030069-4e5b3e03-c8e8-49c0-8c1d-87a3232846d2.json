@@ -1,0 +1,245 @@
+{
+	"info": {
+		"_postman_id": "47030069-4e5b3e03-c8e8-49c0-8c1d-87a3232846d2",
+		"name": "MBbank Nạp tiền tự động",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "MBBank_Identify",
+			"item": [
+				{
+					"name": "MBBank_Identify",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e8171ef1-86f9-43af-8a18-8fb035319a5f",
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "96b0496d-3a20-4fd6-bb1e-7eeb62f79b1d",
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"id": "47030069-c66cdb2c-eea9-4a06-8217-ece201e90a40",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"requestId\": \"{{requestId}}\",\r\n    \"signature\": \"{{signature}}\",\r\n    \"data\": {\r\n        \"referenceNumber\": \"{{referenceNumber}}\",\r\n        \"amount\": \"{{randomAmount}}\",\r\n        \"customerAcc\": \"MBIRIS001\",\r\n        \"transDate\": \"{{datetimenow}}\",\r\n        \"billNumber\": \"{{billNumber}}\",\r\n        \"userName\": \"thuthu\",\r\n        \"customerName\": \"Thu Thu\",\r\n        \"additionalData\": [\r\n            {\r\n                \"value\": \"Nap tien tai khoan hu de\",\r\n                \"name\": \"remark\"\r\n            }\r\n        ]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.1.9:44204/api/v1/order-update",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"9"
+							],
+							"port": "44204",
+							"path": [
+								"api",
+								"v1",
+								"order-update"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "47030069-e89b0ecc-f87e-4d57-b069-864844eae363",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "03054144-130b-47ec-a939-61ec97d72745",
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							"function generateRandomId(length) {\r",
+							"    let result = '';\r",
+							"    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+							"    const charactersLength = characters.length;\r",
+							"    for (let i = 0; i < length; i++) {\r",
+							"        result += characters.charAt(Math.floor(Math.random() * charactersLength));\r",
+							"    }\r",
+							"    return result;\r",
+							"}\r",
+							"// Generate a random number between 100000 and 1000000\r",
+							"const randomAmount = \"10000.00\";\r",
+							"const requestId = require('uuid').v4();\r",
+							"const referenceNumber = require('uuid').v4();\r",
+							"const currentDate = new Date();\r",
+							"const offsetInHours = 7;\r",
+							"currentDate.setHours(currentDate.getHours() + offsetInHours);\r",
+							"const datetimenow = currentDate.toISOString().slice(0, 19).replace('T', ' ');\r",
+							"const billNumber = generateRandomId(10);\r",
+							"\r",
+							"pm.environment.set(\"requestId\", requestId);\r",
+							"pm.environment.set(\"referenceNumber\", referenceNumber);\r",
+							"pm.environment.set(\"randomAmount\", randomAmount.toString());\r",
+							"pm.environment.set(\"datetimenow\", datetimenow);\r",
+							"pm.environment.set(\"billNumber\", billNumber);\r",
+							"\r",
+							"var navigator = {}; //fake a navigator object for the jsrsasign-js lib\r",
+							"var window = {}; //fake a window object for the jsrsasign-js lib\r",
+							"var forge = {}; //fake a window object for the jsrsasign-js lib\r",
+							"// Hàm sign sử dụng CryptoJS và forge\r",
+							"const createSignature = () => {\r",
+							"    try {\r",
+							"        // Lấy forge từ biến environment (nếu đã thêm trước)\r",
+							"        const jsrsasign = pm.globals.get(\"jsrsasign\") || pm.environment.get(\"jsrsasign\");\r",
+							"        \r",
+							"        if (!jsrsasign) {\r",
+							"            throw new Error(\"Forge library not found. Please add forge.min.js to globals/environment variables.\");\r",
+							"        }\r",
+							"\r",
+							"        // Thực thi forge library\r",
+							"        eval(jsrsasign);\r",
+							"\r",
+							"        // Lấy request body dưới dạng JSON\r",
+							"        const requestBody = pm.request.body.raw;\r",
+							"        const jsonData = JSON.parse(requestBody);\r",
+							"\r",
+							"        // Lọc các trường không có giá trị và nối thành chuỗi\r",
+							"        const dataToSign = referenceNumber + jsonData.data.customerAcc + randomAmount.toString() + datetimenow;\r",
+							"        console.log('Data to sign:', dataToSign);\r",
+							"        // Khóa riêng RSA (định dạng PEM) - thay bằng private key của bạn\r",
+							"        const privateKeyPem = `-----BEGIN RSA PRIVATE KEY-----\r",
+							"MIIEogIBAAKCAQB+wHzvjcmhjpu5Z4Vnb+AAIg6Jof7ZZB0JwlKNPYYjngO2qyJG\r",
+							"eAHyJyYvoZHFn+hNGEVnjEDwAVHBK6ZAmNu7u/IudgUUlRs/IluQS3cfhMM/L/o+\r",
+							"0sOu7E9fpUxaJVQek2LwzNnAY/i1wInVjvsaWJuEvGaWfuefodjPh156NcOurIDK\r",
+							"czwvzxiNLJNZYGl7z9xN6f5ow1vTgjHJWgLuH8CqU4l325jF1dl0f19LrlQYa57h\r",
+							"QqqlBxeQY3nF9EKYtdx2wmRNEp6ri8Hxib27wnT8YjtnzOi0RcXxHVO9tfW9uLJ1\r",
+							"ie/h6L2Ppf2C+sJaIz3fgYueOlVs2PEz/iGBAgMBAAECggEAEeFbfnuU7vpsE0p8\r",
+							"MixBACPNwzKb/dS2l/LWrF/6dTnMMk+P5Tr2o09MfrmfE67MGVwMJmBNpM2617It\r",
+							"oL0vehs4Pb+eVdn23wAcxI0wv7x9woMlHQmkWx+wzsBFtg3AARQvh+KN8SrpIdKI\r",
+							"XxztZTkMrzvYiPBcAlPVfukMtdZ8WoOcp/27DsL8HnHrC1r0m0j56OAbtzJrppDv\r",
+							"lXjaoEjgUvoG1wMVX2xZpLnfdBqMcGa+GroGtvWDyGw2gyXyGynucOvE/viy282Z\r",
+							"nSSKJ4gg2lmwDiPZ9wBetsCvdtx0s7NfkfX/fgEgtrW7SAXsO4oXKpCg6MfiFryM\r",
+							"tRr6wQKBgQD3nw/uYsmRTxOahLhHLrr9RkFI1nX7GXpY4c7cVBRUYLYzzj5Jf5sj\r",
+							"L8CkOrTDhVKEuzsu49p9z3l6VXUn3jAALvXSki8mcJ80CeJxWRXS2Ci5+L9f09fm\r",
+							"91Il4WiGrEe7g3owczkurJkOKVPkFjZNhXRv1++Cnw8uaZgiax7fSQKBgQCDCm81\r",
+							"vD85KpwfQ4R0j0Yj5vuBcbFqFsPLyOVd3WB70b0ovAHtSM5V5OXpEwm140SB1OQN\r",
+							"ezOwa6hl7wfvgq7gDYoNhkFHlnUVKg2EBi/DO+0DaXemKt+nhqsxxCCfVfB/D+cx\r",
+							"FnVgfBldKbijVMEEAZ2lDpT1DFPOTWswmPnYeQKBgG4EkBF8ds5G8hDPMwj9bDsn\r",
+							"wc3Y62Z7NW7UNRKTkMzEg2+VDPue5JDHoLHXG4VbcQRkI7F7rxIC4phF692gzHbo\r",
+							"ZnP+W1Ca7UEzuxZdXGLng4DNUkoDV4PZEvido9FiLiTUD7ADIb7pFL/EAO/wJoRe\r",
+							"7RLcQCArB5W5eMyiB39xAoGAQ3Rzmu20ffD5PP68iGPYb1LP1Op5sWrWj2hy6caz\r",
+							"jAmDnhxpwYPg80ZJM5mhPggnk83LN0Vcbkx8+zv4kcprytotXpjlsbw5uRNUscmd\r",
+							"fJq0fzUjal5Xkx03sv6K7HqIul+tWw98jJZVWCfJ7AoM8csDI5xGAX6/BUvFCdc1\r",
+							"hcECgYEAqMKQYu9TtocKeNc4VL+HCCVX3TOmbGaLfFPpyDq1pz0ic5N+moPy0Bhi\r",
+							"vA9PV/kp3ysh6YSGdhTE6R0uPM0qS0pwY7ODKVto3kL1+silZaIdhXx4tUY7O/ef\r",
+							"f4MuCR+2hZHvpfO1eVpzMP73ry0Lzwig8qaaRXei9uWD9GmQFq4=\r",
+							"-----END RSA PRIVATE KEY-----`;\r",
+							"\r",
+							"    const rsa = new KJUR.crypto.Signature({ \"alg\": \"SHA256withRSA\" });\r",
+							"    var privateKey = KEYUTIL.getKey(privateKeyPem);\r",
+							"    rsa.init(privateKey);\r",
+							"    rsa.updateString(dataToSign);\r",
+							"    var jwsSignatureValue = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Hex.parse(rsa.sign()));\r",
+							" \r",
+							"    // Gắn chữ ký vào request header\r",
+							"    pm.environment.set(\"signature\", jwsSignatureValue);\r",
+							"    console.log('Signature:', jwsSignatureValue );\r",
+							"\r",
+							"    } catch (err) {\r",
+							"        console.error('Error creating signature:', err.message);\r",
+							"    }\r",
+							"};\r",
+							"\r",
+							"// Gọi hàm\r",
+							"createSignature();"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "135372a2-fcad-498e-8338-330a94bc1403",
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							"// ==== Parse response ====\r",
+							"let jsonData;\r",
+							"try {\r",
+							"    jsonData = pm.response.json();\r",
+							"} catch (e) {\r",
+							"    pm.test(\"Phản hồi phải là JSON hợp lệ\", function () {\r",
+							"        pm.expect.fail(\"Không parse được JSON: \" + e.message);\r",
+							"    });\r",
+							"    return;\r",
+							"}\r",
+							"\r",
+							"// ==== Check cấu trúc chuẩn ====\r",
+							"pm.test('Response có đủ cấu trúc', function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData).to.have.all.keys('requestId', 'data', 'signature');\r",
+							"    pm.expect(jsonData.data).to.have.property(\"transactionId\");\r",
+							"    pm.expect(jsonData.data).to.have.property(\"responseCode\");\r",
+							"    pm.expect(jsonData.data).to.have.property(\"responseDesc\");\r",
+							"});\r",
+							"\r",
+							"// ==== Expected từ CSV ====\r",
+							"const expectedResponseCode = pm.iterationData.get(\"responseCode\");\r",
+							"const expectedResponseDesc = pm.iterationData.get(\"responseDesc\");\r",
+							"const testcaseName = pm.iterationData.get(\"Testcase Name\") || \"Unnamed Testcase\";\r",
+							"\r",
+							"console.log(\"Running test:\", testcaseName);\r",
+							"\r",
+							"// ==== HTTP status ====\r",
+							"pm.test(\"HTTP status phải là 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"// ==== Check responseCode động ====\r",
+							"if (expectedResponseCode) {\r",
+							"    pm.test(\"responseCode phải khớp CSV (\" + testcaseName + \")\", function () {\r",
+							"        pm.expect(jsonData.data.responseCode).to.eql(expectedResponseCode);\r",
+							"    });\r",
+							"} else {\r",
+							"    pm.test(\"responseCode mặc định = 00\", function () {\r",
+							"        pm.expect(jsonData.data.responseCode).to.eql(\"00\");\r",
+							"    });\r",
+							"}\r",
+							"\r",
+							"// ==== Check responseDesc động ====\r",
+							"if (expectedResponseDesc) {\r",
+							"    pm.test(\"responseDesc phải khớp CSV (\" + testcaseName + \")\", function () {\r",
+							"        pm.expect(jsonData.data.responseDesc).to.eql(expectedResponseDesc);\r",
+							"    });\r",
+							"}"
+						]
+					}
+				}
+			]
+		}
+	]
+}
