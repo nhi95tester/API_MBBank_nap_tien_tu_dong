@@ -78,7 +78,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "e42f768c-e650-4e1c-9c0b-658b2d7fb8c5",
+						"id": "2d00c65a-a3be-4e03-962e-79ee5ff086b5",
 						"type": "text/javascript",
 						"packages": {},
 						"exec": [
@@ -192,7 +192,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "38a64dca-1638-45b4-ac48-406190154657",
+						"id": "6f0a0e32-a955-414d-bf8d-4397f1f280ab",
 						"type": "text/javascript",
 						"packages": {},
 						"exec": [
@@ -221,8 +221,6 @@
 							"const expectedResponseCode = pm.iterationData.get(\"responseCode\");\r",
 							"const expectedResponseDesc = pm.iterationData.get(\"responseDesc\");\r",
 							"const testcaseName = pm.iterationData.get(\"Testcase Name\") || \"Unnamed Testcase\";\r",
-							"\r",
-							"console.log(\"Running test:\", testcaseName);\r",
 							"\r",
 							"// ==== HTTP status ====\r",
 							"pm.test(\"HTTP status phải là 200\", function () {\r",
