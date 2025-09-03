@@ -78,7 +78,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "2d00c65a-a3be-4e03-962e-79ee5ff086b5",
+						"id": "ac39fa45-f315-4652-a4c6-dfc1392dbbeb",
 						"type": "text/javascript",
 						"packages": {},
 						"exec": [
@@ -192,7 +192,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "6f0a0e32-a955-414d-bf8d-4397f1f280ab",
+						"id": "366e36a2-db83-4b63-b708-479e1f3214d0",
 						"type": "text/javascript",
 						"packages": {},
 						"exec": [
@@ -220,7 +220,7 @@
 							"// ==== Expected từ CSV ====\r",
 							"const expectedResponseCode = pm.iterationData.get(\"responseCode\");\r",
 							"const expectedResponseDesc = pm.iterationData.get(\"responseDesc\");\r",
-							"const testcaseName = pm.iterationData.get(\"Testcase Name\") || \"Unnamed Testcase\";\r",
+							"const testcaseName = pm.iterationData.get(\"TestcaseName\") || \"Unnamed Testcase\";\r",
 							"\r",
 							"// ==== HTTP status ====\r",
 							"pm.test(\"HTTP status phải là 200\", function () {\r",
