@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"requestId\": \"{{requestId}}\",\r\n    \"signature\": \"{{signature}}\",\r\n    \"data\": {\r\n        \"referenceNumber\": \"{{referenceNumber}}\",\r\n        \"amount\": \"{{randomAmount}}\",\r\n        \"customerAcc\": \"MBIRIS001\",\r\n        \"transDate\": \"{{datetimenow}}\",\r\n        \"billNumber\": \"{{billNumber}}\",\r\n        \"userName\": \"thuthu\",\r\n        \"customerName\": \"Thu Thu\",\r\n        \"additionalData\": [\r\n            {\r\n                \"value\": \"Nap tien tai khoan hu de\",\r\n                \"name\": \"remark\"\r\n            }\r\n        ]\r\n    }\r\n}",
+							"raw": "{{finalBody}}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
