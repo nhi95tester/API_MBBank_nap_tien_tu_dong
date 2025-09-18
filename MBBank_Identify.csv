@@ -1,0 +1,20 @@
+﻿STT,TestcaseName,requestId,signature,referenceNumber,amount,customerAcc,transDate,billNumber,responseCode,responseDesc
+1,Nạp tiền Thành công,,,,,,,,00,Thành công
+2,requestId trùng,24c17ec0-fcea-4750-81b4-fb4095821dc4,,,,,,,00,Thành công
+3,requestId = null,null,,,,,,,400,The requestId field is required.
+4,signature = null,,null,,,,,,400,The signature field is required.
+5,signature không hợp lệ,,fdgfdhdfhdfhhj,,,,,,01,Signature Error
+6,referenceNumber = null,,,null,,,,,01,Request Data Null
+7,referenceNumber không hợp lệ,,,1e9dca6b-97f3-44d3-bca8-8d5458fd3cba1e9dca6b-97f3-44d3-bca8-8d5458fd3cba1e9dca6b-97f3-44d3-bca8-8d5458fd3cba1e9dca6b-97f3-44d3-bca8-8d5458fd3cba1e9dca6b-97f3-44d3-bca8-8d5458fd3cba1e9dca6b-97f3-44d312ghfdhgfdh,,,,,01,Internal System Error
+8,referenceNumber trùng nhau,,,4655hghgjsdhgj,,,,,01,Duplicate referenceNumber or billNumber
+9,Không truyền giá trị amount,,,,null,,,,01,Request Data Null
+10,Amount không hợp lệ,,,,-10000,,,,01,Request data not in template
+11,customerAcc không tồn tại,,,,,MB987654fdgfdh3,,,01,Not found customer account
+12,customerAcc = null,,,,,null,,,01,Request Data Null
+13,transDate : Sai định dạng,,,,,,00/00/0000,,01,Internal System Error
+14,transDate = null,,,,,,null,,01,Request Data Null
+15,transDate : time ( quá khứ / tương lai),,,,,,45804,,01,Internal System Error
+16,transDate : time ( quá khứ / tương lai),,,,,,46169,,01,Internal System Error
+17,Không có tham số billNumber,,,,,,,null,01,Request Data Null
+18,billNumber đã tồn tại trên hệ thống,,,,,,,6scM9J0IwJ,01,Duplicate referenceNumber or billNumber
+19,billNumber > maxlenght 200,,,,,,,6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ6scM9J0IwJ,01,Internal System Error
