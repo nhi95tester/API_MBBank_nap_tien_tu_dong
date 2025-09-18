@@ -1,0 +1,284 @@
+{
+	"info": {
+		"_postman_id": "4e5b3e03-c8e8-49c0-8c1d-87a3232846d2",
+		"name": "MBbank Nạp tiền tự động",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47030069",
+		"_collection_link": "https://maintenance-saganist-45175478-7419266.postman.co/workspace/1995-nhi's-Workspace~be34bf42-4487-416c-8a1d-1a0e6c58f061/collection/47030069-4e5b3e03-c8e8-49c0-8c1d-87a3232846d2?action=share&source=collection_link&creator=47030069"
+	},
+	"item": [
+		{
+			"name": "MBBank_Identify",
+			"item": [
+				{
+					"name": "MBBank_Identify",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{{finalBody}}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://192.168.1.9:44204/api/v1/order-update",
+							"protocol": "http",
+							"host": [
+								"192",
+								"168",
+								"1",
+								"9"
+							],
+							"port": "44204",
+							"path": [
+								"api",
+								"v1",
+								"order-update"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							"// ====== Helper sinh random ======\r",
+							"function generateRandomId(length) {\r",
+							"    let result = '';\r",
+							"    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\r",
+							"    for (let i = 0; i < length; i++) {\r",
+							"        result += characters.charAt(Math.floor(Math.random() * characters.length));\r",
+							"    }\r",
+							"    return result;\r",
+							"}\r",
+							"\r",
+							"// ====== Helper: Generate GUID JS thuần ======\r",
+							"function generateGuid() {\r",
+							"    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\r",
+							"        let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);\r",
+							"        return v.toString(16);\r",
+							"    });\r",
+							"}\r",
+							"\r",
+							"// ====== Helper chung: lấy từ CSV (null/string/ô trống) ======\r",
+							"function getSmartValue(field, defaultVal) {\r",
+							"    let csvValue = pm.iterationData.get(field);\r",
+							"\r",
+							"    if (csvValue !== undefined && csvValue !== null) {\r",
+							"        let val = csvValue.toString().trim();\r",
+							"        if (val.toLowerCase() === \"null\") return null;     // null thật trong JSON\r",
+							"        if (val !== \"\") return val;                        // giữ nguyên giá trị CSV\r",
+							"    }\r",
+							"\r",
+							"    // nếu CSV trống -> lấy default\r",
+							"    let def = (typeof defaultVal === \"function\") ? defaultVal() : defaultVal;\r",
+							"    return def === undefined ? null : def;\r",
+							"}\r",
+							"\r",
+							"// ====== Helper riêng: signature cần giữ nguyên CSV để test 3 case ======\r",
+							"function getCsvValue(field) {\r",
+							"    let csvValue = pm.iterationData.get(field);\r",
+							"    if (csvValue === undefined || csvValue === null) return \"\";\r",
+							"    return csvValue.toString().trim();\r",
+							"}\r",
+							"\r",
+							"// ====== Sinh dữ liệu động ======\r",
+							"const requestId       = getSmartValue(\"requestId\", generateGuid);\r",
+							"const referenceNumber = getSmartValue(\"referenceNumber\", generateGuid);\r",
+							"const amount          = getSmartValue(\"amount\", \"10000.00\");\r",
+							"const customerAcc     = getSmartValue(\"customerAcc\", \"MBIRIS001\");\r",
+							"\r",
+							"const currentDate = new Date();\r",
+							"currentDate.setHours(currentDate.getHours() + 7);\r",
+							"const transDate = getSmartValue(\"transDate\", () => currentDate.toISOString().slice(0, 19).replace('T', ' '));\r",
+							"\r",
+							"const billNumber   = getSmartValue(\"billNumber\", () => generateRandomId(10));\r",
+							"const userName     = getSmartValue(\"userName\", \"thuthu\");\r",
+							"const customerName = getSmartValue(\"customerName\", \"Thu Thu\");\r",
+							"\r",
+							"// Signature → dùng getCsvValue để phân biệt 3 case\r",
+							"let signatureCsv = getCsvValue(\"signature\");\r",
+							"let signature = null;\r",
+							"\r",
+							"// ====== Fake object để jsrsasign chạy ======\r",
+							"var navigator = {};\r",
+							"var window = {};\r",
+							"var forge = {};\r",
+							"\r",
+							"// ====== Hàm ký số ======\r",
+							"function createSignature(dataToSign) {\r",
+							"    try {\r",
+							"        const jsrsasign = pm.globals.get(\"jsrsasign\") || pm.environment.get(\"jsrsasign\");\r",
+							"        if (!jsrsasign) throw new Error(\"jsrsasign library not found.\");\r",
+							"        eval(jsrsasign);\r",
+							"\r",
+							"        const privateKeyPem = pm.environment.get(\"privateKeyPem\");\r",
+							"        if (!privateKeyPem) throw new Error(\"Chưa cấu hình privateKeyPem trong Environment\");\r",
+							"\r",
+							"        const rsa = new KJUR.crypto.Signature({ alg: \"SHA256withRSA\" });\r",
+							"        const privateKey = KEYUTIL.getKey(privateKeyPem);\r",
+							"        rsa.init(privateKey);\r",
+							"        rsa.updateString(dataToSign);\r",
+							"\r",
+							"        return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Hex.parse(rsa.sign()));\r",
+							"\r",
+							"    } catch (err) {\r",
+							"        console.error(\"Error creating signature:\", err.message);\r",
+							"        return null;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"// ====== Logic xử lý signature ======\r",
+							"if (signatureCsv.toLowerCase() === \"null\") {\r",
+							"    signature = null; // case test thiếu chữ ký\r",
+							"} else if (signatureCsv !== \"\") {\r",
+							"    signature = signatureCsv; // case dùng chữ ký từ CSV\r",
+							"} else {\r",
+							"    // CSV để trống → auto ký\r",
+							"    const dataToSign = referenceNumber + customerAcc + amount + transDate;\r",
+							"    signature = createSignature(dataToSign);\r",
+							"}\r",
+							"\r",
+							"// ====== Build final JSON body ======\r",
+							"const finalBody = {\r",
+							"    requestId: requestId,\r",
+							"    signature: signature,\r",
+							"    data: {\r",
+							"        referenceNumber: referenceNumber,\r",
+							"        amount: amount,\r",
+							"        customerAcc: customerAcc,\r",
+							"        transDate: transDate,\r",
+							"        billNumber: billNumber,\r",
+							"        userName: userName,\r",
+							"        customerName: customerName,\r",
+							"        additionalData: [\r",
+							"            {\r",
+							"                value: \"Nap tien tai khoan hu de\",\r",
+							"                name: \"remark\"\r",
+							"            }\r",
+							"        ]\r",
+							"    }\r",
+							"};\r",
+							"\r",
+							"// ====== Set vào biến để body chỉ cần {{finalBody}} ======\r",
+							"pm.variables.set(\"finalBody\", JSON.stringify(finalBody));\r",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							"// ===== Helpers =====\r",
+							"const getVar = (k) => pm.iterationData.get(k) ?? pm.variables.get(k) ?? undefined;\r",
+							"\r",
+							"const testcaseName =\r",
+							"  getVar(\"TestcaseName\") ||\r",
+							"  getVar(\"testcaseName\") ||\r",
+							"  getVar(\"TCName\") ||\r",
+							"  \"Unnamed Testcase\";\r",
+							"\r",
+							"const expectedResponseCode = getVar(\"responseCode\");\r",
+							"const expectedResponseDesc = getVar(\"responseDesc\");\r",
+							"\r",
+							"let jsonData;\r",
+							"try {\r",
+							"  jsonData = pm.response.json();\r",
+							"} catch (e) {\r",
+							"  pm.test(\"Phản hồi phải là JSON hợp lệ\", function () {\r",
+							"    pm.expect.fail(\"Không parse được JSON: \" + e.message);\r",
+							"  });\r",
+							"  return;\r",
+							"}\r",
+							"\r",
+							"// ===== Xử lý riêng cho 200 và 400 =====\r",
+							"if (pm.response.code === 200) {\r",
+							"  // Status\r",
+							"  pm.test(`HTTP status code = 200 (${testcaseName})`, function () {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"  });\r",
+							"\r",
+							"  // Structure\r",
+							"  pm.test(`Response có cấu trúc chuẩn`, function () {\r",
+							"    pm.expect(jsonData).to.have.property(\"requestId\");\r",
+							"    pm.expect(jsonData).to.have.property(\"data\");\r",
+							"    pm.expect(jsonData.data).to.have.property(\"responseCode\");\r",
+							"    pm.expect(jsonData.data).to.have.property(\"responseDesc\");\r",
+							"  });\r",
+							"\r",
+							"  // Compare values\r",
+							"  const actualCode = jsonData?.data?.responseCode ?? \"\";\r",
+							"  const actualDesc = jsonData?.data?.responseDesc ?? \"\";\r",
+							"\r",
+							"  pm.test(`responseCode (${testcaseName}) | Expected: ${expectedResponseCode} | Actual: ${actualCode}`, function () {\r",
+							"    pm.expect(String(actualCode)).to.eql(String(expectedResponseCode));\r",
+							"  });\r",
+							"\r",
+							"  pm.test(`responseDesc (${testcaseName}) | Expected: ${expectedResponseDesc} | Actual: ${actualDesc}`, function () {\r",
+							"    pm.expect(String(actualDesc)).to.eql(String(expectedResponseDesc));\r",
+							"  });\r",
+							"}\r",
+							"\r",
+							"// ===== Case 400 =====\r",
+							"if (pm.response.code === 400) {\r",
+							"  pm.test(`HTTP status code = 400 (${testcaseName})`, function () {\r",
+							"    pm.expect(pm.response.code).to.eql(400);\r",
+							"  });\r",
+							"\r",
+							"  // Không ép buộc có data giống 200 nữa → check theo error\r",
+							"  const errorField = Object.keys(jsonData.errors || {})[0] || \"\";\r",
+							"  const actualMessage = jsonData?.errors?.[errorField]?.[0] ?? \"\";\r",
+							"\r",
+							"  pm.test(`responseCode (${testcaseName}) | Expected: ${expectedResponseCode} | Actual: 400`, function () {\r",
+							"    pm.expect(\"400\").to.eql(String(expectedResponseCode));\r",
+							"  });\r",
+							"\r",
+							"  pm.test(`responseDesc (${testcaseName}) | Expected: ${expectedResponseDesc} | Actual: ${actualMessage}`, function () {\r",
+							"    pm.expect(String(actualMessage)).to.eql(String(expectedResponseDesc));\r",
+							"  });\r",
+							"}\r",
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}
